@@ -1,16 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap');
 
 :root {
-  --bg: #edf3ff;
+  --bg: #f7f2f7;
   --card: #ffffff;
-  --ink: #14213d;
-  --muted: #5d6b85;
-  --primary: #123ea7;
-  --primary-soft: #dce8ff;
-  --success: #0f9d6c;
-  --danger: #ca3151;
-  --ring: #c7d8ff;
-  --shadow: 0 16px 34px rgba(18, 62, 167, 0.11);
+  --ink: #2a1631;
+  --muted: #6e5d76;
+  --primary: #7b1e4f;
+  --primary-soft: #f2e5ef;
+  --success: #2f8a66;
+  --danger: #bb2f56;
+  --ring: #e2cfe0;
+  --shadow: 0 16px 36px rgba(123, 30, 79, 0.14);
 }
 
 * {
@@ -20,7 +20,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 20% 20%, #f9fbff 0%, var(--bg) 58%, #e6efff 100%);
+  background: radial-gradient(circle at 22% 18%, #fff8fe 0%, var(--bg) 55%, #f0e5f2 100%);
   color: var(--ink);
   font-family: 'Manrope', 'Segoe UI', sans-serif;
   position: relative;
@@ -29,24 +29,24 @@ body {
 
 .bg-orb {
   position: fixed;
-  width: 320px;
-  height: 320px;
+  width: 340px;
+  height: 340px;
   border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.45;
+  filter: blur(72px);
+  opacity: 0.5;
   pointer-events: none;
 }
 
 .orb-left {
-  background: #8dd3ff;
-  top: -90px;
-  left: -70px;
+  background: #d8a2c1;
+  top: -100px;
+  left: -72px;
 }
 
 .orb-right {
-  background: #88a9ff;
-  right: -70px;
-  top: 120px;
+  background: #b79adf;
+  right: -80px;
+  top: 126px;
 }
 
 .layout {
@@ -59,14 +59,14 @@ body {
 }
 
 .card {
-  background: color-mix(in oklab, var(--card) 92%, #f6f9ff);
-  border: 1px solid #d6e2ff;
+  background: color-mix(in oklab, var(--card) 93%, #faf4fa);
+  border: 1px solid #ead8e7;
   border-radius: 1.15rem;
   box-shadow: var(--shadow);
 }
 
 .topbar {
-  padding: 0.9rem 1.15rem;
+  padding: 0.95rem 1.2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -85,7 +85,7 @@ body {
   border-radius: 0.85rem;
   display: grid;
   place-items: center;
-  background: linear-gradient(145deg, #1359c9 0%, #0e2e82 100%);
+  background: linear-gradient(145deg, #8a2458 0%, #5f1848 100%);
   color: #fff;
   font-family: 'Sora', sans-serif;
   font-weight: 700;
@@ -101,37 +101,37 @@ body {
 }
 
 .brand h1 {
-  margin: 0.1rem 0 0;
+  margin: 0.12rem 0 0;
   font-family: 'Sora', sans-serif;
   font-size: 1.2rem;
 }
 
 .status-pill {
   margin: 0;
-  padding: 0.4rem 0.7rem;
+  padding: 0.42rem 0.75rem;
   border-radius: 999px;
-  background: #e8efff;
-  color: #2950b8;
+  background: #f2e2ee;
+  color: #78224f;
   font-size: 0.8rem;
   font-weight: 700;
 }
 
 .hero {
-  background: linear-gradient(125deg, #0d2a7e 0%, #1448b8 52%, #1a7ed8 100%);
+  background: linear-gradient(128deg, #65153e 0%, #7f1f55 46%, #5b2b86 100%);
   color: #fff;
-  padding: 1.25rem;
+  padding: 1.28rem;
   animation: rise 540ms ease-out;
 }
 
 .hero h2 {
-  margin: 0.5rem 0 0.4rem;
+  margin: 0.5rem 0 0.42rem;
   font-family: 'Sora', sans-serif;
   font-size: clamp(1.25rem, 2.2vw, 2rem);
 }
 
 .hero p {
   margin: 0;
-  color: #cfe1ff;
+  color: #f4e5f4;
   max-width: 720px;
 }
 
@@ -140,7 +140,7 @@ body {
   margin: 0;
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.17);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -181,6 +181,7 @@ body {
   margin: 0.8rem 0 0;
   font-family: 'Sora', sans-serif;
   font-size: 1.35rem;
+  color: #5f1848;
 }
 
 .two-col {
@@ -237,13 +238,13 @@ button {
 
 input:focus,
 select:focus {
-  outline: 2px solid color-mix(in oklab, var(--primary) 34%, #fff);
+  outline: 2px solid color-mix(in oklab, var(--primary) 30%, #fff);
   border-color: var(--primary);
 }
 
 button {
   margin-top: 0.3rem;
-  background: linear-gradient(145deg, #1452ce 0%, #12328f 100%);
+  background: linear-gradient(145deg, #8a2458 0%, #5f1848 100%);
   color: #fff;
   border: none;
   font-weight: 700;
@@ -253,7 +254,7 @@ button {
 
 button:hover {
   transform: translateY(-1px);
-  filter: brightness(1.03);
+  filter: brightness(1.04);
 }
 
 .message {
@@ -284,7 +285,7 @@ th,
 td {
   text-align: left;
   padding: 0.6rem 0.5rem;
-  border-bottom: 1px solid #e4edff;
+  border-bottom: 1px solid #efdeec;
   vertical-align: top;
 }
 
@@ -303,13 +304,13 @@ th {
 }
 
 .tag.credit {
-  background: #def8ee;
-  color: #0d8f61;
+  background: #dff4ea;
+  color: #2a7b58;
 }
 
 .tag.debit {
-  background: #ffe5ec;
-  color: #c1284a;
+  background: #f9e0e9;
+  color: #b12d54;
 }
 
 @keyframes rise {
