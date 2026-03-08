@@ -20,7 +20,7 @@
         <p id="healthStatus" class="status">Checking server...</p>
       </header>
 
-      <section id="authView" class="panel-grid">
+      <section id="authView" class="panel-grid panel-grid-two">
         <article class="panel glass">
           <h2>Customer Login</h2>
           <form id="customerLoginForm" class="form-stack">
@@ -63,22 +63,6 @@
               <input id="createOpeningBalance" type="number" min="10000" step="0.01" value="10000" required />
             </label>
             <button type="submit">Create Account</button>
-          </form>
-        </article>
-
-        <article class="panel glass admin">
-          <h2>Admin Login</h2>
-          <p>Only authorized admin can access.</p>
-          <form id="adminLoginForm" class="form-stack">
-            <label>
-              Name
-              <input id="adminName" type="text" placeholder="Anish" required />
-            </label>
-            <label>
-              Password
-              <input id="adminPassword" type="password" required />
-            </label>
-            <button type="submit">Admin Sign In</button>
           </form>
         </article>
       </section>
@@ -240,36 +224,6 @@
         <article class="panel glass contact">
           <h3>Contact Us</h3>
           <p id="contactInfo"></p>
-        </article>
-      </section>
-
-      <section id="adminView" class="hidden">
-        <header class="workspace-head glass">
-          <div>
-            <p class="eyebrow">Admin Console</p>
-            <h2 id="adminHeading">Anish</h2>
-            <p>Authorized customers overview</p>
-          </div>
-          <button id="adminLogout" class="ghost">Logout</button>
-        </header>
-
-        <article class="panel glass">
-          <h3>Customer Accounts</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Account</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Type</th>
-                  <th>Balance</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody id="adminAccountsBody"></tbody>
-            </table>
-          </div>
         </article>
       </section>
 

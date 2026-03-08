@@ -3,7 +3,6 @@ const globalMessage = document.getElementById('globalMessage');
 
 const authView = document.getElementById('authView');
 const customerView = document.getElementById('customerView');
-const adminView = document.getElementById('adminView');
 
 const customerHeading = document.getElementById('customerHeading');
 const customerSubline = document.getElementById('customerSubline');
@@ -13,7 +12,6 @@ const accountNumberValue = document.getElementById('accountNumberValue');
 
 const transactionBody = document.getElementById('transactionBody');
 const depositBody = document.getElementById('depositBody');
-const adminAccountsBody = document.getElementById('adminAccountsBody');
 const contactInfo = document.getElementById('contactInfo');
 
 const depositType = document.getElementById('depositType');
@@ -31,7 +29,6 @@ const state = {
   customer: null,
   customerPassword: null,
   minimumBalance: 1000,
-  adminName: null,
   pendingLogin: null,
 };
 
@@ -67,7 +64,6 @@ const api = async (url, options = {}) => {
 const switchView = (view) => {
   authView.classList.add('hidden');
   customerView.classList.add('hidden');
-  adminView.classList.add('hidden');
   view.classList.remove('hidden');
 };
 
@@ -171,29 +167,6 @@ const requestLoginOtp = async (accountNumber, password, email = '') => {
   });
 };
 
-const loadAdminAccounts = async () => {
-  const accounts = await api('/api/accounts');
-  adminAccountsBody.innerHTML = '';
-
-  if (accounts.length === 0) {
-    adminAccountsBody.innerHTML = '<tr><td colspan="6">No accounts found.</td></tr>';
-    return;
-  }
-
-  accounts.forEach((account) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${account.account_number}</td>
-      <td>${account.holder_name}</td>
-      <td>${account.email || '-'}</td>
-      <td>${account.account_type}</td>
-      <td>${money(account.balance)}</td>
-      <td>${new Date(account.created_at).toLocaleDateString('en-IN')}</td>
-    `;
-    adminAccountsBody.appendChild(tr);
-  });
-};
-
 sendLoginOtpBtn.addEventListener('click', async () => {
   try {
     const accountNumber = document.getElementById('loginAccountNumber').value.trim();
@@ -279,28 +252,6 @@ document.getElementById('customerCreateForm').addEventListener('submit', async (
       `Account created. Account No: ${created.account_number}, Password: ${created.password}. OTP sent to ${otpResult.destination}.`,
       'success'
     );
-  } catch (error) {
-    showMessage(error.message, 'error');
-  }
-});
-
-document.getElementById('adminLoginForm').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  try {
-    const name = document.getElementById('adminName').value.trim();
-    const password = document.getElementById('adminPassword').value;
-
-    const result = await api('/api/auth/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, password }),
-    });
-
-    state.adminName = result.admin_name;
-    document.getElementById('adminHeading').textContent = state.adminName;
-    switchView(adminView);
-    await loadAdminAccounts();
-    showMessage('Admin login successful', 'success');
   } catch (error) {
     showMessage(error.message, 'error');
   }
@@ -448,12 +399,6 @@ document.getElementById('customerLogout').addEventListener('click', () => {
   showMessage('Logged out', 'success');
 });
 
-document.getElementById('adminLogout').addEventListener('click', () => {
-  state.adminName = null;
-  switchView(authView);
-  showMessage('Admin logged out', 'success');
-});
-
 const loadHealth = async () => {
   try {
     const response = await api('/api/health');
@@ -471,6 +416,3 @@ const loadHealth = async () => {
     contactInfo.textContent = 'Contact details unavailable right now.';
   }
 })();
-
-
-

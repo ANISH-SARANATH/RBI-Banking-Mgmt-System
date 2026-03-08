@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RBI Admin | Regal Bank of India</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="backdrop"></div>
+    <main class="portal">
+      <header class="topbar glass">
+        <div class="brand-wrap">
+          <div class="brand-mark">RBI</div>
+          <div>
+            <p class="eyebrow">Restricted Access</p>
+            <h1>Admin Portal</h1>
+          </div>
+        </div>
+        <p id="healthStatus" class="status">Checking server...</p>
+      </header>
+
+      <section id="adminAuthView" class="panel-grid panel-grid-single">
+        <article class="panel glass admin-panel-center">
+          <h2>Admin Login</h2>
+          <p>Only the authorized admin can access this page.</p>
+          <form id="adminLoginForm" class="form-stack">
+            <label>
+              Name
+              <input id="adminName" type="text" placeholder="Anish" required />
+            </label>
+            <label>
+              Password
+              <input id="adminPassword" type="password" required />
+            </label>
+            <button type="submit">Admin Sign In</button>
+          </form>
+        </article>
+      </section>
+
+      <section id="adminView" class="hidden">
+        <header class="workspace-head glass">
+          <div>
+            <p class="eyebrow">Admin Console</p>
+            <h2 id="adminHeading">Anish</h2>
+            <p>Authorized customer account overview</p>
+          </div>
+          <button id="adminLogout" class="ghost">Logout</button>
+        </header>
+
+        <article class="panel glass">
+          <h3>Customer Accounts</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Account</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Type</th>
+                  <th>Balance</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="adminAccountsBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <p id="globalMessage" class="notice"></p>
+    </main>
+
+    <script src="/static/admin.js"></script>
+  </body>
+</html>

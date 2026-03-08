@@ -148,6 +148,15 @@ h3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.panel-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel-grid-single {
+  grid-template-columns: minmax(0, 560px);
+  justify-content: center;
+}
+
 .stats-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -198,6 +207,11 @@ h3 {
 
 .panel p {
   color: var(--muted);
+}
+
+.admin-panel-center {
+  max-width: 560px;
+  margin-inline: auto;
 }
 
 .form-stack {
@@ -352,6 +366,8 @@ tbody tr:hover {
 
 @media (max-width: 980px) {
   .panel-grid,
+  .panel-grid-two,
+  .panel-grid-single,
   .stats-grid,
   .action-grid,
   .history-grid,
@@ -369,3 +385,5 @@ tbody tr:hover {
     margin-top: 1.1rem;
   }
 }
+
+

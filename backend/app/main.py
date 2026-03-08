@@ -141,4 +141,9 @@ def index() -> FileResponse:
     return FileResponse(FRONTEND_DIR / "index.html")
 
 
+@app.get("/admin")
+def admin_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "admin.html")
+
+
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")

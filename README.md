@@ -4,7 +4,7 @@ Upgraded from the original project logic into a working FastAPI + SQLite + front
 
 ## What This Version Supports
 - Customer account creation (random account number and password, opening balance min `10000`)
-- Customer sign in with email OTP authentication
+- Customer sign in with email OTP authentication (on `/`)
 - Withdraw with minimum-balance rule (`1000`)
 - Deposits:
   - Normal deposit (updates balance)
@@ -14,7 +14,7 @@ Upgraded from the original project logic into a working FastAPI + SQLite + front
 - Loans workflow (education/home/auto, optional form URL)
 - Transaction history and deposits history
 - Contact section
-- Admin-only login:
+- Admin-only login (on `/admin` only):
   - Name: `Anish`
   - Password: `1939`
 
@@ -32,7 +32,8 @@ python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Open: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+Open customer portal: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+Open admin portal: [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin)
 
 ## Data
 - SQLite DB: `backend/data/rbi_bank.db`
