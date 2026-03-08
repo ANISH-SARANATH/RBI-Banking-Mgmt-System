@@ -1,159 +1,476 @@
 const healthStatus = document.getElementById('healthStatus');
-const accountCards = document.getElementById('accountCards');
-const fromAccount = document.getElementById('fromAccount');
-const toAccount = document.getElementById('toAccount');
-const txnAccount = document.getElementById('txnAccount');
-const txnBody = document.getElementById('txnBody');
-const transferForm = document.getElementById('transferForm');
-const transferMessage = document.getElementById('transferMessage');
+const globalMessage = document.getElementById('globalMessage');
 
-let accounts = [];
+const authView = document.getElementById('authView');
+const customerView = document.getElementById('customerView');
+const adminView = document.getElementById('adminView');
 
-const formatMoney = (value) =>
-  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value);
+const customerHeading = document.getElementById('customerHeading');
+const customerSubline = document.getElementById('customerSubline');
+const balanceValue = document.getElementById('balanceValue');
+const minimumBalanceValue = document.getElementById('minimumBalanceValue');
+const accountNumberValue = document.getElementById('accountNumberValue');
 
-const renderAccounts = () => {
-  accountCards.innerHTML = '';
+const transactionBody = document.getElementById('transactionBody');
+const depositBody = document.getElementById('depositBody');
+const adminAccountsBody = document.getElementById('adminAccountsBody');
+const contactInfo = document.getElementById('contactInfo');
 
-  accounts.forEach((account, index) => {
-    const article = document.createElement('article');
-    article.className = 'card account-card';
-    article.style.animationDelay = `${index * 80}ms`;
-    article.innerHTML = `
-      <h4>${account.account_type}</h4>
-      <p class="holder">${account.holder_name}</p>
-      <p class="number">${account.account_number}</p>
-      <p class="balance">${formatMoney(account.balance)}</p>
-    `;
-    accountCards.appendChild(article);
-  });
+const depositType = document.getElementById('depositType');
+const frequencyField = document.getElementById('frequencyField');
+const cardAction = document.getElementById('cardAction');
+const cardNumberField = document.getElementById('cardNumberField');
+const sendForms = document.getElementById('sendForms');
+const loanEmailField = document.getElementById('loanEmailField');
+
+const loginOtpField = document.getElementById('loginOtpField');
+const loginOtpInput = document.getElementById('loginOtp');
+const sendLoginOtpBtn = document.getElementById('sendLoginOtp');
+
+const state = {
+  customer: null,
+  customerPassword: null,
+  minimumBalance: 1000,
+  adminName: null,
+  pendingLogin: null,
 };
 
-const renderAccountOptions = () => {
-  const options = accounts
-    .map((account) => `<option value="${account.account_number}">${account.account_number} - ${account.holder_name}</option>`)
-    .join('');
+const money = (value) =>
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 2,
+  }).format(value);
 
-  fromAccount.innerHTML = options;
-  toAccount.innerHTML = options;
-  txnAccount.innerHTML = options;
+const showMessage = (text, type = '') => {
+  globalMessage.className = `notice${type ? ` ${type}` : ''}`;
+  globalMessage.textContent = text;
+};
 
-  if (accounts.length > 1) {
-    toAccount.value = accounts[1].account_number;
+const api = async (url, options = {}) => {
+  const response = await fetch(url, options);
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch (_error) {
+    data = null;
   }
-};
-
-const loadTransactions = async (accountNumber) => {
-  txnBody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
-
-  const response = await fetch(`/api/accounts/${accountNumber}/transactions?limit=10`);
-  const data = await response.json();
 
   if (!response.ok) {
-    txnBody.innerHTML = `<tr><td colspan="4">${data.detail || 'Failed to load transactions'}</td></tr>`;
+    throw new Error(data?.detail || 'Request failed');
+  }
+
+  return data;
+};
+
+const switchView = (view) => {
+  authView.classList.add('hidden');
+  customerView.classList.add('hidden');
+  adminView.classList.add('hidden');
+  view.classList.remove('hidden');
+};
+
+const resetLoginOtpState = () => {
+  state.pendingLogin = null;
+  loginOtpInput.value = '';
+  loginOtpInput.required = false;
+  loginOtpField.classList.add('hidden');
+};
+
+const renderTransactions = (rows) => {
+  transactionBody.innerHTML = '';
+
+  if (rows.length === 0) {
+    transactionBody.innerHTML = '<tr><td colspan="4">No transactions yet.</td></tr>';
     return;
   }
 
-  txnBody.innerHTML = '';
-
-  if (data.length === 0) {
-    txnBody.innerHTML = '<tr><td colspan="4">No transactions yet.</td></tr>';
-    return;
-  }
-
-  data.forEach((txn) => {
-    const row = document.createElement('tr');
-    const typeClass = txn.txn_type === 'CREDIT' ? 'credit' : 'debit';
-    const signedAmount = txn.txn_type === 'CREDIT' ? txn.amount : -txn.amount;
-    row.innerHTML = `
-      <td><span class="tag ${typeClass}">${txn.txn_type}</span></td>
-      <td>${formatMoney(signedAmount)}</td>
+  rows.forEach((txn) => {
+    const tr = document.createElement('tr');
+    const signed = txn.txn_type === 'CREDIT' ? txn.amount : -txn.amount;
+    tr.innerHTML = `
+      <td>${txn.txn_type}</td>
+      <td>${money(signed)}</td>
       <td>${txn.description}</td>
       <td>${new Date(txn.created_at).toLocaleString('en-IN')}</td>
     `;
-    txnBody.appendChild(row);
+    transactionBody.appendChild(tr);
   });
 };
 
-const loadAccounts = async () => {
-  const response = await fetch('/api/accounts');
-  const data = await response.json();
+const renderDeposits = (rows) => {
+  depositBody.innerHTML = '';
 
-  if (!response.ok) {
-    throw new Error(data.detail || 'Failed to load accounts');
+  if (rows.length === 0) {
+    depositBody.innerHTML = '<tr><td colspan="4">No deposits history yet.</td></tr>';
+    return;
   }
 
-  accounts = data;
-  renderAccounts();
-  renderAccountOptions();
-
-  if (accounts.length > 0) {
-    await loadTransactions(accounts[0].account_number);
-  }
+  rows.forEach((dep) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${dep.deposit_type}</td>
+      <td>${dep.frequency || '-'}</td>
+      <td>${money(dep.amount)}</td>
+      <td>${dep.expected_total ? money(dep.expected_total) : '-'}</td>
+    `;
+    depositBody.appendChild(tr);
+  });
 };
 
-const loadHealth = async () => {
-  try {
-    const response = await fetch('/api/health');
-    const data = await response.json();
-    if (response.ok && data.status === 'ok') {
-      healthStatus.textContent = 'API Online';
-    } else {
-      healthStatus.textContent = 'API Error';
-    }
-  } catch (_error) {
-    healthStatus.textContent = 'API Offline';
-  }
+const loadContact = async () => {
+  const info = await api('/api/contact');
+  contactInfo.textContent = `Phone: ${info.phones.join(' / ')} | Email: ${info.email}`;
 };
 
-transferForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  transferMessage.className = 'message';
-  transferMessage.textContent = 'Processing transfer...';
+const refreshCustomerWorkspace = async () => {
+  if (!state.customer) {
+    return;
+  }
 
+  const accountNumber = state.customer.account_number;
+  const account = await api(`/api/accounts/${accountNumber}`);
+  const transactions = await api(`/api/accounts/${accountNumber}/transactions?limit=20`);
+  const deposits = await api(`/api/accounts/${accountNumber}/deposits?limit=20`);
+
+  customerHeading.textContent = account.holder_name;
+  customerSubline.textContent = `Personal banking dashboard for account ${account.account_number}`;
+  balanceValue.textContent = money(account.balance);
+  minimumBalanceValue.textContent = money(state.minimumBalance);
+  accountNumberValue.textContent = account.account_number;
+
+  renderTransactions(transactions);
+  renderDeposits(deposits);
+  await loadContact();
+};
+
+const showCustomer = async (summary, password) => {
+  state.customer = { account_number: summary.account_number, holder_name: summary.holder_name };
+  state.customerPassword = Number(password);
+  state.minimumBalance = summary.minimum_balance || 1000;
+
+  switchView(customerView);
+  await refreshCustomerWorkspace();
+};
+
+const requestLoginOtp = async (accountNumber, password, email = '') => {
   const payload = {
-    from_account_number: fromAccount.value,
-    to_account_number: toAccount.value,
-    amount: Number(document.getElementById('amount').value),
-    description: document.getElementById('description').value.trim(),
+    account_number: accountNumber,
+    password: Number(password),
   };
 
-  const response = await fetch('/api/transfers', {
+  if (email.trim()) {
+    payload.email = email.trim().toLowerCase();
+  }
+
+  return api('/api/auth/customer/login/request-otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+};
 
-  const result = await response.json();
+const loadAdminAccounts = async () => {
+  const accounts = await api('/api/accounts');
+  adminAccountsBody.innerHTML = '';
 
-  if (!response.ok) {
-    transferMessage.className = 'message error';
-    transferMessage.textContent = result.detail || 'Transfer failed';
+  if (accounts.length === 0) {
+    adminAccountsBody.innerHTML = '<tr><td colspan="6">No accounts found.</td></tr>';
     return;
   }
 
-  transferMessage.className = 'message success';
-  transferMessage.textContent = `Transfer successful. Ref #${result.transfer_id}`;
+  accounts.forEach((account) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${account.account_number}</td>
+      <td>${account.holder_name}</td>
+      <td>${account.email || '-'}</td>
+      <td>${account.account_type}</td>
+      <td>${money(account.balance)}</td>
+      <td>${new Date(account.created_at).toLocaleDateString('en-IN')}</td>
+    `;
+    adminAccountsBody.appendChild(tr);
+  });
+};
 
-  await loadAccounts();
-  await loadTransactions(txnAccount.value || payload.from_account_number);
-  transferForm.reset();
-  if (accounts.length > 1) {
-    fromAccount.value = accounts[0].account_number;
-    toAccount.value = accounts[1].account_number;
+sendLoginOtpBtn.addEventListener('click', async () => {
+  try {
+    const accountNumber = document.getElementById('loginAccountNumber').value.trim();
+    const passwordRaw = document.getElementById('loginPassword').value.trim();
+    const password = Number(passwordRaw);
+    const email = document.getElementById('loginEmail').value.trim();
+
+    if (!accountNumber || !passwordRaw || Number.isNaN(password)) {
+      showMessage('Enter account number and password before requesting OTP', 'error');
+      return;
+    }
+
+    const result = await requestLoginOtp(accountNumber, password, email);
+    state.pendingLogin = { accountNumber, password };
+    loginOtpField.classList.remove('hidden');
+    loginOtpInput.required = true;
+    showMessage(`OTP sent to ${result.destination}. It is valid for 5 minutes.`, 'success');
+  } catch (error) {
+    showMessage(error.message, 'error');
   }
 });
 
-txnAccount.addEventListener('change', async (event) => {
-  await loadTransactions(event.target.value);
+document.getElementById('customerLoginForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  try {
+    const accountNumber = document.getElementById('loginAccountNumber').value.trim();
+    const passwordRaw = document.getElementById('loginPassword').value.trim();
+    const password = Number(passwordRaw);
+    const otp = loginOtpInput.value.trim();
+
+    if (!accountNumber || !passwordRaw || Number.isNaN(password)) {
+      showMessage('Enter account number and password before verifying OTP', 'error');
+      return;
+    }
+
+    if (!state.pendingLogin || state.pendingLogin.accountNumber !== accountNumber) {
+      showMessage('Request OTP first for this account', 'error');
+      return;
+    }
+
+    if (!otp || otp.length !== 6) {
+      showMessage('Enter the 6-digit OTP from email', 'error');
+      return;
+    }
+
+    const summary = await api('/api/auth/customer/login/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account_number: accountNumber, password, otp }),
+    });
+
+    await showCustomer(summary, password);
+    resetLoginOtpState();
+    showMessage('Signed in successfully with email OTP', 'success');
+  } catch (error) {
+    showMessage(error.message, 'error');
+  }
 });
+
+document.getElementById('customerCreateForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  try {
+    const name = document.getElementById('createName').value.trim();
+    const email = document.getElementById('createEmail').value.trim().toLowerCase();
+    const openingBalance = Number(document.getElementById('createOpeningBalance').value);
+
+    const created = await api('/api/auth/customer/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, opening_balance: openingBalance }),
+    });
+
+    document.getElementById('loginAccountNumber').value = created.account_number;
+    document.getElementById('loginPassword').value = String(created.password);
+    document.getElementById('loginEmail').value = created.email;
+
+    const otpResult = await requestLoginOtp(created.account_number, created.password, created.email);
+    state.pendingLogin = { accountNumber: created.account_number, password: created.password };
+    loginOtpField.classList.remove('hidden');
+    loginOtpInput.required = true;
+
+    showMessage(
+      `Account created. Account No: ${created.account_number}, Password: ${created.password}. OTP sent to ${otpResult.destination}.`,
+      'success'
+    );
+  } catch (error) {
+    showMessage(error.message, 'error');
+  }
+});
+
+document.getElementById('adminLoginForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  try {
+    const name = document.getElementById('adminName').value.trim();
+    const password = document.getElementById('adminPassword').value;
+
+    const result = await api('/api/auth/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, password }),
+    });
+
+    state.adminName = result.admin_name;
+    document.getElementById('adminHeading').textContent = state.adminName;
+    switchView(adminView);
+    await loadAdminAccounts();
+    showMessage('Admin login successful', 'success');
+  } catch (error) {
+    showMessage(error.message, 'error');
+  }
+});
+
+document.getElementById('withdrawForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!state.customer) {
+    return;
+  }
+
+  try {
+    const amount = Number(document.getElementById('withdrawAmount').value);
+    const result = await api(`/api/accounts/${state.customer.account_number}/withdraw`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: state.customerPassword, amount }),
+    });
+
+    showMessage(`${result.message}. New balance: ${money(result.balance)}`, 'success');
+    event.target.reset();
+    await refreshCustomerWorkspace();
+  } catch (error) {
+    showMessage(error.message, 'error');
+  }
+});
+
+depositType.addEventListener('change', () => {
+  frequencyField.classList.toggle('hidden', depositType.value !== 'RECURRING');
+});
+
+document.getElementById('depositForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!state.customer) {
+    return;
+  }
+
+  try {
+    const payload = {
+      password: state.customerPassword,
+      deposit_type: depositType.value,
+      amount: Number(document.getElementById('depositAmount').value),
+    };
+
+    if (depositType.value === 'RECURRING') {
+      payload.recurring_frequency = document.getElementById('recurringFrequency').value;
+    }
+
+    const result = await api(`/api/accounts/${state.customer.account_number}/deposit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const details = result.expected_total ? ` Expected total: ${money(result.expected_total)}` : '';
+    showMessage(`${result.message}.${details}`, 'success');
+    event.target.reset();
+    frequencyField.classList.add('hidden');
+    await refreshCustomerWorkspace();
+  } catch (error) {
+    showMessage(error.message, 'error');
+  }
+});
+
+cardAction.addEventListener('change', () => {
+  const requiresCard = cardAction.value === 'ACTIVATE_OLD';
+  cardNumberField.classList.toggle('hidden', !requiresCard);
+  document.getElementById('cardNumber').required = requiresCard;
+});
+
+document.getElementById('cardForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!state.customer) {
+    return;
+  }
+
+  try {
+    const action = cardAction.value;
+    const cardNumber = document.getElementById('cardNumber').value.trim();
+
+    const payload = {
+      password: state.customerPassword,
+      card_type: document.getElementById('cardType').value,
+      action,
+      card_number: action === 'ACTIVATE_OLD' ? cardNumber : null,
+    };
+
+    const result = await api(`/api/accounts/${state.customer.account_number}/cards`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    showMessage(`${result.message} (${result.status})`, 'success');
+    event.target.reset();
+    cardNumberField.classList.remove('hidden');
+    document.getElementById('cardNumber').required = true;
+  } catch (error) {
+    showMessage(error.message, 'error');
+  }
+});
+
+sendForms.addEventListener('change', () => {
+  loanEmailField.classList.toggle('hidden', !sendForms.checked);
+  document.getElementById('loanEmail').required = sendForms.checked;
+});
+
+document.getElementById('loanForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!state.customer) {
+    return;
+  }
+
+  try {
+    const wantsForms = sendForms.checked;
+    const payload = {
+      password: state.customerPassword,
+      loan_type: document.getElementById('loanType').value,
+      phone: document.getElementById('loanPhone').value.trim(),
+      send_forms: wantsForms,
+      email: wantsForms ? document.getElementById('loanEmail').value.trim() : null,
+    };
+
+    const result = await api(`/api/accounts/${state.customer.account_number}/loans`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const urlMessage = result.form_url ? ` Form URL: ${result.form_url}` : '';
+    showMessage(`${result.message}${urlMessage}`, 'success');
+    event.target.reset();
+    loanEmailField.classList.add('hidden');
+    document.getElementById('loanEmail').required = false;
+  } catch (error) {
+    showMessage(error.message, 'error');
+  }
+});
+
+document.getElementById('customerLogout').addEventListener('click', () => {
+  state.customer = null;
+  state.customerPassword = null;
+  resetLoginOtpState();
+  switchView(authView);
+  showMessage('Logged out', 'success');
+});
+
+document.getElementById('adminLogout').addEventListener('click', () => {
+  state.adminName = null;
+  switchView(authView);
+  showMessage('Admin logged out', 'success');
+});
+
+const loadHealth = async () => {
+  try {
+    const response = await api('/api/health');
+    healthStatus.textContent = response.status === 'ok' ? 'Server Online' : 'Server Error';
+  } catch (_error) {
+    healthStatus.textContent = 'Server Offline';
+  }
+};
 
 (async () => {
   await loadHealth();
   try {
-    await loadAccounts();
-  } catch (error) {
-    transferMessage.className = 'message error';
-    transferMessage.textContent = error.message;
+    await loadContact();
+  } catch (_error) {
+    contactInfo.textContent = 'Contact details unavailable right now.';
   }
 })();
+
+
+

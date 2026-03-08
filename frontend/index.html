@@ -3,83 +3,277 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RBI Banking Management System</title>
+    <title>Regal Bank of India</title>
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
-    <div class="bg-orb orb-left"></div>
-    <div class="bg-orb orb-right"></div>
-
-    <main class="layout">
-      <header class="topbar card">
-        <div class="brand">
-          <div class="brand-logo">RB</div>
+    <div class="backdrop"></div>
+    <main class="portal">
+      <header class="topbar glass">
+        <div class="brand-wrap">
+          <div class="brand-mark">RBI</div>
           <div>
-            <p class="brand-overline">Banking Console</p>
+            <p class="eyebrow">Digital Banking</p>
             <h1>Regal Bank of India</h1>
           </div>
         </div>
-        <p class="status-pill" id="healthStatus">Checking API...</p>
+        <p id="healthStatus" class="status">Checking server...</p>
       </header>
 
-      <section class="hero card">
-        <div>
-          <p class="hero-badge">Secure and Real-Time</p>
-          <h2>RBI Banking Management System</h2>
-          <p>Python backend, SQLite storage, and a YONO-inspired responsive UI in one project folder.</p>
-        </div>
-      </section>
-
-      <section class="grid-3" id="accountCards"></section>
-
-      <section class="two-col">
-        <article class="card panel">
-          <div class="panel-head">
-            <h3>Quick Transfer</h3>
-            <p>Internal transfer between RBI accounts</p>
-          </div>
-          <form id="transferForm" class="transfer-form">
+      <section id="authView" class="panel-grid">
+        <article class="panel glass">
+          <h2>Customer Login</h2>
+          <form id="customerLoginForm" class="form-stack">
             <label>
-              From Account
-              <select id="fromAccount" required></select>
+              Account Number
+              <input id="loginAccountNumber" type="text" required />
             </label>
             <label>
-              To Account
-              <select id="toAccount" required></select>
+              Password
+              <input id="loginPassword" type="number" required />
             </label>
             <label>
-              Amount (Rs)
-              <input id="amount" type="number" min="1" step="0.01" required />
+              Email (optional if already linked)
+              <input id="loginEmail" type="email" placeholder="you@example.com" />
             </label>
-            <label>
-              Description
-              <input id="description" type="text" minlength="3" maxlength="120" value="Transfer via RBI portal" required />
+            <label id="loginOtpField" class="hidden">
+              OTP from Email
+              <input id="loginOtp" type="text" minlength="6" maxlength="6" />
             </label>
-            <button type="submit">Transfer Funds</button>
+            <div class="button-row">
+              <button id="sendLoginOtp" type="button">Send OTP</button>
+              <button type="submit" class="ghost">Verify OTP & Sign In</button>
+            </div>
           </form>
-          <p id="transferMessage" class="message"></p>
         </article>
 
-        <article class="card panel">
-          <div class="panel-head">
-            <h3>Recent Transactions</h3>
-            <select id="txnAccount"></select>
+        <article class="panel glass">
+          <h2>Create Account</h2>
+          <form id="customerCreateForm" class="form-stack">
+            <label>
+              Full Name
+              <input id="createName" type="text" minlength="2" required />
+            </label>
+            <label>
+              Email
+              <input id="createEmail" type="email" required />
+            </label>
+            <label>
+              Opening Balance (min Rs 10,000)
+              <input id="createOpeningBalance" type="number" min="10000" step="0.01" value="10000" required />
+            </label>
+            <button type="submit">Create Account</button>
+          </form>
+        </article>
+
+        <article class="panel glass admin">
+          <h2>Admin Login</h2>
+          <p>Only authorized admin can access.</p>
+          <form id="adminLoginForm" class="form-stack">
+            <label>
+              Name
+              <input id="adminName" type="text" placeholder="Anish" required />
+            </label>
+            <label>
+              Password
+              <input id="adminPassword" type="password" required />
+            </label>
+            <button type="submit">Admin Sign In</button>
+          </form>
+        </article>
+      </section>
+
+      <section id="customerView" class="hidden">
+        <header class="workspace-head glass">
+          <div>
+            <p class="eyebrow">Welcome</p>
+            <h2 id="customerHeading">Customer</h2>
+            <p id="customerSubline"></p>
           </div>
+          <button id="customerLogout" class="ghost">Logout</button>
+        </header>
+
+        <div class="stats-grid">
+          <article class="stat glass">
+            <p>Available Balance</p>
+            <h3 id="balanceValue">Rs 0</h3>
+          </article>
+          <article class="stat glass">
+            <p>Minimum Balance</p>
+            <h3 id="minimumBalanceValue">Rs 1000</h3>
+          </article>
+          <article class="stat glass">
+            <p>Account Number</p>
+            <h3 id="accountNumberValue">-</h3>
+          </article>
+        </div>
+
+        <div class="action-grid">
+          <article class="panel glass">
+            <h3>Withdraw</h3>
+            <form id="withdrawForm" class="form-stack compact">
+              <label>
+                Amount (Rs)
+                <input id="withdrawAmount" type="number" min="1" step="0.01" required />
+              </label>
+              <button type="submit">Withdraw</button>
+            </form>
+          </article>
+
+          <article class="panel glass">
+            <h3>Deposit</h3>
+            <form id="depositForm" class="form-stack compact">
+              <label>
+                Deposit Type
+                <select id="depositType">
+                  <option value="NORMAL">Normal Deposit</option>
+                  <option value="FIXED">Fixed Deposit</option>
+                  <option value="RECURRING">Recurring Deposit</option>
+                </select>
+              </label>
+              <label id="frequencyField" class="hidden">
+                Recurring Frequency
+                <select id="recurringFrequency">
+                  <option value="MONTHLY">Monthly</option>
+                  <option value="QUARTERLY">Quarterly</option>
+                  <option value="ANNUALLY">Annually</option>
+                </select>
+              </label>
+              <label>
+                Amount (Rs)
+                <input id="depositAmount" type="number" min="1" step="0.01" required />
+              </label>
+              <button type="submit">Submit Deposit</button>
+            </form>
+          </article>
+
+          <article class="panel glass">
+            <h3>Cards</h3>
+            <form id="cardForm" class="form-stack compact">
+              <label>
+                Card Type
+                <select id="cardType">
+                  <option value="DEBIT">Debit Card</option>
+                  <option value="CREDIT">Credit Card</option>
+                  <option value="BUSINESS">Business Card</option>
+                </select>
+              </label>
+              <label>
+                Action
+                <select id="cardAction">
+                  <option value="ACTIVATE_OLD">Activate Old Card</option>
+                  <option value="APPLY_NEW">Apply New Card</option>
+                </select>
+              </label>
+              <label id="cardNumberField">
+                16-digit Card Number
+                <input id="cardNumber" type="text" minlength="16" maxlength="16" />
+              </label>
+              <button type="submit">Submit Card Request</button>
+            </form>
+          </article>
+
+          <article class="panel glass">
+            <h3>Loans</h3>
+            <form id="loanForm" class="form-stack compact">
+              <label>
+                Loan Type
+                <select id="loanType">
+                  <option value="EDUCATION">Education Loan</option>
+                  <option value="HOME">Home Loan</option>
+                  <option value="AUTO">Auto Loan</option>
+                </select>
+              </label>
+              <label>
+                Phone (10 digits)
+                <input id="loanPhone" type="text" minlength="10" maxlength="10" required />
+              </label>
+              <label class="inline-check">
+                <input id="sendForms" type="checkbox" />
+                Send form link to email
+              </label>
+              <label id="loanEmailField" class="hidden">
+                Email
+                <input id="loanEmail" type="email" />
+              </label>
+              <button type="submit">Submit Loan Request</button>
+            </form>
+          </article>
+        </div>
+
+        <div class="history-grid">
+          <article class="panel glass">
+            <h3>Transaction History</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="transactionBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel glass">
+            <h3>Deposits History</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Freq</th>
+                    <th>Amount</th>
+                    <th>Expected</th>
+                  </tr>
+                </thead>
+                <tbody id="depositBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel glass contact">
+          <h3>Contact Us</h3>
+          <p id="contactInfo"></p>
+        </article>
+      </section>
+
+      <section id="adminView" class="hidden">
+        <header class="workspace-head glass">
+          <div>
+            <p class="eyebrow">Admin Console</p>
+            <h2 id="adminHeading">Anish</h2>
+            <p>Authorized customers overview</p>
+          </div>
+          <button id="adminLogout" class="ghost">Logout</button>
+        </header>
+
+        <article class="panel glass">
+          <h3>Customer Accounts</h3>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
+                  <th>Account</th>
+                  <th>Name</th>
+                  <th>Email</th>
                   <th>Type</th>
-                  <th>Amount</th>
-                  <th>Description</th>
-                  <th>Date</th>
+                  <th>Balance</th>
+                  <th>Created</th>
                 </tr>
               </thead>
-              <tbody id="txnBody"></tbody>
+              <tbody id="adminAccountsBody"></tbody>
             </table>
           </div>
         </article>
       </section>
+
+      <p id="globalMessage" class="notice"></p>
     </main>
 
     <script src="/static/app.js"></script>

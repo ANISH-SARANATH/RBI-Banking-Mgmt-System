@@ -1,6 +1,6 @@
+from datetime import datetime, timezone
 from pathlib import Path
 import sqlite3
-from datetime import datetime, timezone
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_DIR = BASE_DIR / "data"
@@ -18,6 +18,20 @@ def get_connection() -> sqlite3.Connection:
     return connection
 
 
+def _ensure_password_column(cursor: sqlite3.Cursor) -> None:
+    cursor.execute("PRAGMA table_info(accounts)")
+    columns = {row["name"] for row in cursor.fetchall()}
+    if "password" not in columns:
+        cursor.execute("ALTER TABLE accounts ADD COLUMN password INTEGER NOT NULL DEFAULT 0")
+
+
+def _ensure_email_column(cursor: sqlite3.Cursor) -> None:
+    cursor.execute("PRAGMA table_info(accounts)")
+    columns = {row["name"] for row in cursor.fetchall()}
+    if "email" not in columns:
+        cursor.execute("ALTER TABLE accounts ADD COLUMN email TEXT NOT NULL DEFAULT ''")
+
+
 def init_database() -> None:
     with get_connection() as connection:
         cursor = connection.cursor()
@@ -28,12 +42,16 @@ def init_database() -> None:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 account_number TEXT UNIQUE NOT NULL,
                 holder_name TEXT NOT NULL,
+                password INTEGER NOT NULL DEFAULT 0,
+                email TEXT NOT NULL DEFAULT '',
                 account_type TEXT NOT NULL CHECK(account_type IN ('SAVINGS', 'CURRENT')),
                 balance REAL NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL
             )
             """
         )
+        _ensure_password_column(cursor)
+        _ensure_email_column(cursor)
 
         cursor.execute(
             """
@@ -51,68 +69,73 @@ def init_database() -> None:
 
         cursor.execute(
             """
-            CREATE TABLE IF NOT EXISTS transfers (
+            CREATE TABLE IF NOT EXISTS deposits (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                from_account_id INTEGER NOT NULL,
-                to_account_id INTEGER NOT NULL,
+                account_id INTEGER NOT NULL,
+                deposit_type TEXT NOT NULL CHECK(deposit_type IN ('NORMAL', 'FIXED', 'RECURRING')),
+                frequency TEXT CHECK(frequency IN ('MONTHLY', 'QUARTERLY', 'ANNUALLY')),
                 amount REAL NOT NULL CHECK(amount > 0),
-                description TEXT NOT NULL,
+                expected_total REAL,
                 created_at TEXT NOT NULL,
-                FOREIGN KEY(from_account_id) REFERENCES accounts(id),
-                FOREIGN KEY(to_account_id) REFERENCES accounts(id)
+                FOREIGN KEY(account_id) REFERENCES accounts(id)
+            )
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS card_requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id INTEGER NOT NULL,
+                card_type TEXT NOT NULL CHECK(card_type IN ('DEBIT', 'CREDIT', 'BUSINESS')),
+                action TEXT NOT NULL CHECK(action IN ('ACTIVATE_OLD', 'APPLY_NEW')),
+                card_number TEXT,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES accounts(id)
+            )
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS loan_requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id INTEGER NOT NULL,
+                loan_type TEXT NOT NULL CHECK(loan_type IN ('EDUCATION', 'HOME', 'AUTO')),
+                phone TEXT NOT NULL,
+                send_forms INTEGER NOT NULL DEFAULT 0,
+                email TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES accounts(id)
+            )
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS otp_codes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id INTEGER NOT NULL,
+                purpose TEXT NOT NULL,
+                otp_code TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                consumed_at TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES accounts(id)
             )
             """
         )
 
         cursor.execute("SELECT COUNT(*) AS count FROM accounts")
         account_count = cursor.fetchone()["count"]
-
         if account_count == 0:
-            seed_accounts = [
-                ("RBI0001001", "Anish Saranath", "SAVINGS", 248000.00, _utc_now()),
-                ("RBI0001002", "Regal Payroll", "CURRENT", 999500.00, _utc_now()),
-                ("RBI0001003", "Vendor Services", "CURRENT", 133250.00, _utc_now()),
-            ]
-
-            cursor.executemany(
-                """
-                INSERT INTO accounts(account_number, holder_name, account_type, balance, created_at)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                seed_accounts,
-            )
-
-            cursor.execute("SELECT id, account_number FROM accounts")
-            id_lookup = {row["account_number"]: row["id"] for row in cursor.fetchall()}
-
-            seed_transactions = [
-                (id_lookup["RBI0001001"], "CREDIT", 86000, "Salary credit", _utc_now()),
-                (id_lookup["RBI0001001"], "DEBIT", 24000, "Rent payment", _utc_now()),
-                (id_lookup["RBI0001001"], "DEBIT", 2140, "Electricity bill", _utc_now()),
-                (id_lookup["RBI0001002"], "DEBIT", 125000, "Vendor payout", _utc_now()),
-                (id_lookup["RBI0001003"], "CREDIT", 125000, "Settlement received", _utc_now()),
-            ]
-
-            cursor.executemany(
-                """
-                INSERT INTO transactions(account_id, txn_type, amount, description, created_at)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                seed_transactions,
-            )
-
             cursor.execute(
                 """
-                INSERT INTO transfers(from_account_id, to_account_id, amount, description, created_at)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO accounts(account_number, holder_name, password, email, account_type, balance, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (
-                    id_lookup["RBI0001002"],
-                    id_lookup["RBI0001003"],
-                    125000,
-                    "Initial seeded transfer",
-                    _utc_now(),
-                ),
+                ("65001", "Sample Customer", 555, "sample.customer@rbi.local", "SAVINGS", 25000.0, _utc_now()),
             )
 
         connection.commit()
